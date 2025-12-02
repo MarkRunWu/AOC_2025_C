@@ -9,19 +9,26 @@ typedef struct {
 } Movement;
 
 Movement move(int current_pos, char* movement) {
-    int next_steps = atoi(movement + 1);
+    int steps = atoi(movement + 1);
+    int next_steps = steps;
     if (*movement == 'L') {
-        next_steps = -next_steps;
+        next_steps = -steps;
     }
     int end_pos = current_pos + next_steps;
-    int pass_zero_count = 0;
     while(end_pos < 0) {
-        pass_zero_count += 1;
         end_pos += 100;
     }
     while(end_pos >= 100) {
-        pass_zero_count += 1;
         end_pos -= 100;
+    }
+    if (current_pos == 0 ) {
+        steps -= *movement == 'L' ? 100 - end_pos : end_pos;
+    }
+    int target_pos = end_pos + steps;
+    int pass_zero_count;
+    while(target_pos >= 100) {
+        target_pos -= 100;
+        pass_zero_count++;
     }
 
     Movement m = { 
@@ -41,6 +48,7 @@ int main(int argc, char** argv) {
     FILE *fp = fopen(argv[1] , "r");
 
     char buffer[100];
+    char text[100];
     int current_pos = 50;
     int password = 0;
     Movement pre = {};
@@ -52,9 +60,15 @@ int main(int argc, char** argv) {
         password += m.pass_zero_count;
 
         pre = m;
-        printf("%s %d to %d, dial through zero count: %d\n",buffer, current_pos, m.next_pos, m.pass_zero_count);
+        int offset = sprintf(text, "%s %d to %d", buffer, current_pos, m.next_pos);
+        if (m.pass_zero_count > 0) {
+            offset += sprintf(text + offset, ", dial through zero count: %d", m.pass_zero_count);
+        }
+        if (m.next_pos == 0) {
+            offset += sprintf(text + offset, ", stays at zero");
+        }
+        printf("%s\n", text);
         current_pos = m.next_pos;
-        printf("password: %d\n", password);
     }
     printf("AOC 2025 day 1, answer %d", password);
     return 0;
