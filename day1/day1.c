@@ -8,26 +8,30 @@ typedef struct {
     char dir;
 } Movement;
 
+int mod(int num, int m) {
+    int n = num % m;
+    return (n < 0) ? n + m : n;
+}
+
 Movement move(int current_pos, char* movement) {
     int steps = atoi(movement + 1);
     int next_steps = steps;
     if (*movement == 'L') {
         next_steps = -steps;
     }
-    int end_pos = current_pos + next_steps;
+    int end_pos = mod(current_pos + next_steps, 100);
     int pass_zero_count = 0;
-    while(end_pos < 0) {
-        end_pos += 100;
-        pass_zero_count++;
-    }
-    while(end_pos >= 100) {
-        end_pos -= 100;
-        pass_zero_count++;
-    }
-    if ((current_pos == 0 || end_pos == 0) && pass_zero_count > 0) {
-        pass_zero_count--;
-    }
 
+    int pos = current_pos;
+    int step = *movement == 'L' ? -1 : 1;
+    int remain_steps = steps;
+    while(remain_steps > 0){
+        pos = mod(pos + step, 100);
+        remain_steps--;
+        if (pos == 0 && remain_steps > 0) {
+            pass_zero_count++;
+        }
+    }
     Movement m = { 
         current_pos,
         end_pos,
