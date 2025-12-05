@@ -29,6 +29,36 @@ int is_invalid_id(char* num) {
     return false;
 }
 
+int is_invalid_id_v2(char* num) {
+    int size = strlen(num);
+    int pattern_size = size / 2;
+    if(pattern_size < 1)  {
+        return false;
+    }
+    for(int i = pattern_size; i > 0; i--) {
+        if (size % i > 0) {
+            continue;
+        }
+        bool is_all_match = true;
+        int max_steps = size / i;
+        int step = 1;
+        while(step < max_steps) {
+            int offset = step*i;
+            for(int j = 0; j < i; j++) {
+                if (num[j] != num[j+offset]) {
+                    is_all_match = false;
+                    break;
+                }
+            }
+            step++;
+        }
+        if (is_all_match) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         printf("missing input file name");
@@ -48,7 +78,7 @@ int main(int argc, char** argv) {
         char buf[64];
         while(num[0] <= num[1]) {
             sprintf(buf, "%ld", num[0]);
-            if (is_invalid_id(buf)) {
+            if (is_invalid_id_v2(buf)) {
                 printf("%ld\n", num[0]);
                 sum += num[0];
             }
