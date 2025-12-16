@@ -26,7 +26,77 @@ int part1(struct Range **ranges, int range_size, long *nums, int nums_size) {
   return sum;
 }
 
-int part2(struct Range **ranges, int range_size) { return 0; }
+struct node {
+  struct Range *d;
+  struct node *next;
+};
+
+struct queue {
+  struct node *head;
+  struct node *tail;
+};
+
+void enqueue(struct queue *q, struct Range *data) {
+  struct node *n = malloc(sizeof(struct node));
+  n->d = data;
+  n->next = NULL;
+  if (!q->head) {
+    q->head = n;
+    q->tail = n;
+    return;
+  }
+  q->tail->next = n;
+  q->tail = n;
+}
+
+struct Range *dequeue(struct queue *q) {
+  if (!q->head) {
+    return NULL;
+  }
+  struct node *current = q->head;
+  q->head = q->head->next;
+
+  if (!q->head) {
+    q->tail = NULL;
+  }
+
+  current->next = NULL;
+  return current->d;
+}
+
+long part2(struct queue *q) {
+  long sum = 0;
+  struct Range *current;
+  struct Range *next;
+  while ((current = dequeue(q))) {
+    sum += current->max - current->min + 1;
+    struct queue tmp_q = {NULL, NULL};
+    while ((next = dequeue(q))) {
+      if (next->min > current->max || next->max < current->min) {
+        // no intersection
+        enqueue(&tmp_q, next);
+        continue;
+      }
+      // split ranges
+      if (current->min > next->min) {
+        struct Range *l = malloc(sizeof(struct Range));
+        l->min = next->min;
+        l->max = current->min - 1;
+        enqueue(&tmp_q, l);
+      }
+      if (current->max < next->max) {
+        struct Range *r = malloc(sizeof(struct Range));
+        r->min = current->max + 1;
+        r->max = next->max;
+        enqueue(&tmp_q, r);
+      }
+    }
+    while ((next = dequeue(&tmp_q))) {
+      enqueue(q, next);
+    }
+  }
+  return sum;
+}
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -65,7 +135,13 @@ int main(int argc, char **argv) {
     }
     nums[nums_size++] = atol(buffer);
   }
-  printf("Part 1: %d\nPart 2: %d", part1(ranges, range_size, nums, nums_size),
-         part2(ranges, range_size));
+  struct queue q;
+  q.head = NULL;
+  q.tail = NULL;
+  for (int i = 0; i < range_size; i++) {
+    enqueue(&q, ranges[i]);
+  }
+  printf("Part 1: %d\nPart 2: %ld", part1(ranges, range_size, nums, nums_size),
+         part2(&q));
   return 0;
 }
